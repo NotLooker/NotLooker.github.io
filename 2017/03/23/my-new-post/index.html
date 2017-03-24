@@ -1,0 +1,384 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="John Doe">
+  
+  
+  
+  
+    <meta name="description" content="转载注明出处：http://blog.csdn.net/u010181592/article/category/5893483
+文章出自 我不只是看客的博客
+　　好久不更新博客了，视频播放相关技术继续积累。最近整理了下前端时间实现的瀑布流播放等，现在放出博客，接下来几篇 会陆续讲解 瀑布流跳转详情页的缓冲播放，以及多段视频资源的无缝切换；　　短视频的资本浪潮导致很多公司都要分一杯羹，然后就苦...">
+  
+  <title>my new post [ NotLooker ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2017/03/22/hello-world/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        Hello World
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://7te9fe.com1.z0.glb.clouddn.com/default_avatar.jpg"/>
+          <div id="homelink">NotLooker</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/index.html">Home</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">Archives</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about.md">About</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="https://github.com/NotLooker">Github</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>my new post</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2017-03-23</span>
+      
+        <span id = "post-title-updated">Updated at 2017-03-24</span>
+      
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/博客，文章/">博客，文章</a>
+      
+      </span>
+      
+    </p>
+    
+    <h4 id="转载注明出处："><a href="#转载注明出处：" class="headerlink" title="转载注明出处："></a>转载注明出处：</h4><p><a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">http://blog.csdn.net/u010181592/article/category/5893483</a></p>
+<h4 id="文章出自-我不只是看客的博客"><a href="#文章出自-我不只是看客的博客" class="headerlink" title="文章出自 我不只是看客的博客"></a>文章出自 <a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">我不只是看客</a>的博客</h4><hr>
+<p>　　好久不更新博客了，视频播放相关技术继续积累。最近整理了下前端时间实现的瀑布流播放等，现在放出博客，接下来几篇 会陆续讲解 瀑布流跳转详情页的缓冲播放，以及多段视频资源的无缝切换；<br>　　短视频的资本浪潮导致很多公司都要分一杯羹，然后就苦了我们这群写代码的，要支持各种播放需求。。。<br>　　下面正文开始：<br>android开发中播放视频大概有3中模式，videoview+mediaplayer是最灵活强大的定制化解决办法，videoview继承于SurfaceView；简单介绍下SurfaceView：</p>
+<blockquote>
+<p>SurfaceView从Android 1.0(API level 1)时就有 。它继承自类View，因此它本质上是一个View。但与普通View不同的是，它有自己的Surface。我们知道，一般的Activity包含的多个View会组成View hierachy的树形结构，只有最顶层的DecorView，也就是根结点视图，才是对WMS可见的。这个DecorView在WMS中有一个对应的WindowState。相应地，在SF中对应的Layer。而SurfaceView自带一个Surface，这个Surface在WMS中有自己对应的WindowState，在SF中也会有自己的Layer。如下图所示：<br>   <img src="http://img.blog.csdn.net/20170314172230511?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="图1"><br>   也就是说，虽然在App端它仍在View hierachy中，但在Server端（WMS和SF）中，它与宿主窗口是分离的。这样的好处是对这个Surface的渲染可以放到单独线程去做，渲染时可以有自己的GL context。这对于一些游戏、视频等性能相关的应用非常有益，因为它不会影响主线程对事件的响应。但它也有缺点，因为这个Surface不在View hierachy中，它的显示也不受View的属性控制，所以不能进行平移，缩放等变换，也不能放在其它ViewGroup中，一些View中的特性也无法使用。</p>
+</blockquote>
+<p>既然SurfaceView并不是一个真正的view，既它无法平移，那么自然不能把它放到listview中，查看API发现在 3.0后引入了个SurfaceTexture的东西</p>
+<blockquote>
+<p>SurfaceTexture从Android 3.0(API level 11)加入。和SurfaceView不同的是，它对图像流的处理并不直接显示，而是转为GL外部纹理，因此可用于图像流数据的二次处理（如Camera滤镜，桌面特效等）。比如Camera的预览数据，变成纹理后可以交给GLSurfaceView直接显示，也可以通过SurfaceTexture交给TextureView作为View heirachy中的一个硬件加速层来显示。首先，SurfaceTexture从图像流（来自Camera预览，视频解码，GL绘制场景等）中获得帧数据，当调用updateTexImage()时，根据内容流中最近的图像更新SurfaceTexture对应的GL纹理对象，接下来，就可以像操作普通GL纹理一样操作它了。从下面的类图中可以看出，它核心管理着一个BufferQueue的Consumer和Producer两端。Producer端用于内容流的源输出数据，Consumer端用于拿GraphicBuffer并生成纹理。SurfaceTexture.OnFrameAvailableListener用于让SurfaceTexture的使用者知道有新数据到来。JNISurfaceTextureContext是OnFrameAvailableListener从Native到Java的JNI跳板。其中SurfaceTexture中的attachToGLContext()和detachToGLContext()可以让多个GL context共享同一个内容源。</p>
+</blockquote>
+<p>于是继续搜索SurfaceTexture，发现在(API level 14)中 google进入了一个新的组件TextureView。</p>
+<blockquote>
+<p>它可以将内容流直接投影到View中，可以用于实现Live preview等功能。和SurfaceView不同，它不会在WMS中单独创建窗口，而是作为View hierachy中的一个普通View，因此可以和其它普通View一样进行移动，旋转，缩放，动画等变化。值得注意的是TextureView必须在硬件加速的窗口中。它显示的内容流数据可以来自App进程或是远端进程。TextureView继承自View，它与其它的View一样在View hierachy中管理与绘制。TextureView重载了draw()方法，其中主要把SurfaceTexture中收到的图像数据作为纹理更新到对应的HardwareLayer中。</p>
+</blockquote>
+<p><strong>SurfaceTexture就是mediaplayer输出视频流的窗口</strong> Bingo！新的View找到了；<br>接下来就是使用TextureView+Meidaplayer播放视频了；<br>节约篇幅，省略无关代码：</p>
+<pre><code>textureView = (TextureView) findViewById(R.id.textureview1);
+final MediaPlayer mediaPlayer = new MediaPlayer();
+textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+       @Override
+       public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+           mediaPlayer.setSurface(new Surface(surface));//设置播放窗口
+           try {
+               mediaPlayer.setDataSource(url);//添加播放地址
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+           mediaPlayer.prepareAsync();//进入准备装填
+           mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+               @Override
+               public void onPrepared(MediaPlayer mp) {
+                   mediaPlayer.start();
+               }
+           });//准备播放完成监听
+       }
+
+       @Override
+       public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+       }
+
+       @Override
+       public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+           return false;
+       }
+
+       @Override
+       public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+       }
+   });
+</code></pre><p>部分解释： </p>
+<pre><code>textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener())
+</code></pre><p>想要获取到TextureView的SurfaceTexture就需要确保TextureView正确的初始化， 而TextureView正好提供了一个监听TextureView.SurfaceTextureListener 她可以监听SurfaceTexture的生成、变化、销毁和更新，如果你确定TextureView已经生成完成的话 也可以直接用getSurfaceTexture来获取；<br>在onSurfaceTextureAvailable回调中，添加MediaPlayer的初始化操作。<br>在onPrepared回调中 开始播放；</p>
+<p>如果MediaPlayer报错极有可能是状态变更出现问题，相关文章给出：<a href="http://blog.csdn.net/fengyuzhengfan/article/details/38492167" target="_blank" rel="external">Android开发之MdiaPlayer详解</a></p>
+<p>PS：本次测试的URL是http地址，可直接播放，读者需替换掉自己的可播放地址；MediaPlayer的setDataSource支持http/rtps地址，支持本地文件目录以及FileDescriptor的播放，但是android5.0及以上对读取本地文件做了权限增加，相关文献不做展开 ，这里只提供部分解决方案：在AndroidManifest.xml<br>中增加读取权限</p>
+<pre><code>&lt;uses-permission android:name=&quot;android.permission.READ_EXTERNAL_STORAGE&quot; /&gt;  
+&lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; /&gt;  
+&lt;uses-permission android:name=&quot;android.permission.MOUNT_UNMOUNT_FILESYSTEMS&quot; /&gt;  
+</code></pre><p>然后在android6.0以上在app设置中开启应用文件读取权限，就可以播放了</p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#转载注明出处："><span class="toc-text">转载注明出处：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#文章出自-我不只是看客的博客"><span class="toc-text">文章出自 我不只是看客的博客</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2017/03/22/hello-world/" class="next">Next post Hello World &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by John Doe using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="https://img.rr.tv/video/20170322/o_6923290903.jpg">
+    <p id="description"></p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/NotLooker">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="http://weibo.com/2653536740/profile?rightmod=1&wvr=6&mod=personinfo">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/wang-he-88-65/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="http://blog.csdn.net/u010181592">
+        
+          CSDN
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
