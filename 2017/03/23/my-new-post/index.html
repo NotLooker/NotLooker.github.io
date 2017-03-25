@@ -110,7 +110,7 @@
     <p class="page-title-sub">
       <span id = "post-title-date">Created at 2017-03-23</span>
       
-        <span id = "post-title-updated">Updated at 2017-03-24</span>
+        <span id = "post-title-updated">Updated at 2017-03-25</span>
       
       
       
@@ -140,49 +140,16 @@
 <blockquote>
 <p>它可以将内容流直接投影到View中，可以用于实现Live preview等功能。和SurfaceView不同，它不会在WMS中单独创建窗口，而是作为View hierachy中的一个普通View，因此可以和其它普通View一样进行移动，旋转，缩放，动画等变化。值得注意的是TextureView必须在硬件加速的窗口中。它显示的内容流数据可以来自App进程或是远端进程。TextureView继承自View，它与其它的View一样在View hierachy中管理与绘制。TextureView重载了draw()方法，其中主要把SurfaceTexture中收到的图像数据作为纹理更新到对应的HardwareLayer中。</p>
 </blockquote>
-<p><strong>SurfaceTexture就是mediaplayer输出视频流的窗口</strong> Bingo！新的View找到了；<br>接下来就是使用TextureView+Meidaplayer播放视频了；<br>节约篇幅，省略无关代码：</p>
-<pre><code>textureView = (TextureView) findViewById(R.id.textureview1);
-final MediaPlayer mediaPlayer = new MediaPlayer();
-textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-       @Override
-       public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-           mediaPlayer.setSurface(new Surface(surface));//设置播放窗口
-           try {
-               mediaPlayer.setDataSource(url);//添加播放地址
-           } catch (IOException e) {
-               e.printStackTrace();
-           }
-           mediaPlayer.prepareAsync();//进入准备装填
-           mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-               @Override
-               public void onPrepared(MediaPlayer mp) {
-                   mediaPlayer.start();
-               }
-           });//准备播放完成监听
-       }
-
-       @Override
-       public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-       }
-
-       @Override
-       public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-           return false;
-       }
-
-       @Override
-       public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-       }
-   });
-</code></pre><p>部分解释： </p>
-<pre><code>textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener())
-</code></pre><p>想要获取到TextureView的SurfaceTexture就需要确保TextureView正确的初始化， 而TextureView正好提供了一个监听TextureView.SurfaceTextureListener 她可以监听SurfaceTexture的生成、变化、销毁和更新，如果你确定TextureView已经生成完成的话 也可以直接用getSurfaceTexture来获取；<br>在onSurfaceTextureAvailable回调中，添加MediaPlayer的初始化操作。<br>在onPrepared回调中 开始播放；</p>
+<p><strong>SurfaceTexture就是mediaplayer输出视频流的窗口</strong> Bingo！新的View找到了；<br>接下来就是使用TextureView+Meidaplayer播放视频了；<br>节约篇幅，省略无关代码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line">textureView = (TextureView) findViewById(R.id.textureview1);</div><div class="line">   <span class="keyword">final</span> MediaPlayer mediaPlayer = <span class="keyword">new</span> MediaPlayer();</div><div class="line">   textureView.setSurfaceTextureListener(<span class="keyword">new</span> TextureView.SurfaceTextureListener() &#123;</div><div class="line">       <span class="meta">@Override</span></div><div class="line">       <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureAvailable</span><span class="params">(SurfaceTexture surface, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</div><div class="line">           mediaPlayer.setSurface(<span class="keyword">new</span> Surface(surface));</div><div class="line">               <span class="keyword">try</span> &#123;</div><div class="line">                   mediaPlayer.setDataSource(url);</div><div class="line">               &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                   e.printStackTrace();</div><div class="line">               &#125;</div><div class="line">               mediaPlayer.prepareAsync();</div><div class="line">               mediaPlayer.setOnPreparedListener(<span class="keyword">new</span> MediaPlayer.OnPreparedListener() &#123;</div><div class="line">                   <span class="meta">@Override</span></div><div class="line">                   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onPrepared</span><span class="params">(MediaPlayer mp)</span> </span>&#123;</div><div class="line">                       mediaPlayer.start();</div><div class="line">                   &#125;</div><div class="line">               &#125;);</div><div class="line">           &#125;</div><div class="line"></div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureSizeChanged</span><span class="params">(SurfaceTexture surface, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</div><div class="line">           &#125;</div><div class="line"></div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onSurfaceTextureDestroyed</span><span class="params">(SurfaceTexture surface)</span> </span>&#123;</div><div class="line">               <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">           &#125;</div><div class="line"></div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureUpdated</span><span class="params">(SurfaceTexture surface)</span> </span>&#123;</div><div class="line">           &#125;</div><div class="line">       &#125;</div><div class="line">   &#125;);</div></pre></td></tr></table></figure></p>
+<p>部分解释：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">textureView.setSurfaceTextureListener(<span class="keyword">new</span> TextureView.SurfaceTextureListener());</div></pre></td></tr></table></figure>
+<p>想要获取到TextureView的SurfaceTexture就需要确保TextureView正确的初始化， 而TextureView正好提供了一个监听TextureView.SurfaceTextureListener 它可以监听SurfaceTexture的生成、变化、销毁和更新，如果你确定TextureView已经生成完成的话 也可以直接用getSurfaceTexture来获取；</p>
+<p>在onSurfaceTextureAvailable回调中，添加MediaPlayer的初始化操作。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureAvailable</span><span class="params">(SurfaceTexture surface, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</div><div class="line">    mediaPlayer.setSurface(<span class="keyword">new</span> Surface(surface));</div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        mediaPlayer.setDataSource(url);</div><div class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">        e.printStackTrace();</div><div class="line">    &#125;</div><div class="line">    mediaPlayer.prepareAsync();</div><div class="line">    mediaPlayer.setOnPreparedListener(<span class="keyword">new</span> MediaPlayer.OnPreparedListener() &#123;</div><div class="line">        <span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onPrepared</span><span class="params">(MediaPlayer mp)</span> </span>&#123;</div><div class="line">            mediaPlayer.start();</div><div class="line">        &#125;</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>获取了surfaceTexture后塞给mediaPlayer；然后设置url，并且将mediaplayer设置准备状态；设置准备播放监听，在onPrepared回调中 开始播放；</p>
 <p>如果MediaPlayer报错极有可能是状态变更出现问题，相关文章给出：<a href="http://blog.csdn.net/fengyuzhengfan/article/details/38492167" target="_blank" rel="external">Android开发之MdiaPlayer详解</a></p>
-<p>PS：本次测试的URL是http地址，可直接播放，读者需替换掉自己的可播放地址；MediaPlayer的setDataSource支持http/rtps地址，支持本地文件目录以及FileDescriptor的播放，但是android5.0及以上对读取本地文件做了权限增加，相关文献不做展开 ，这里只提供部分解决方案：在AndroidManifest.xml<br>中增加读取权限</p>
-<pre><code>&lt;uses-permission android:name=&quot;android.permission.READ_EXTERNAL_STORAGE&quot; /&gt;  
-&lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; /&gt;  
-&lt;uses-permission android:name=&quot;android.permission.MOUNT_UNMOUNT_FILESYSTEMS&quot; /&gt;  
-</code></pre><p>然后在android6.0以上在app设置中开启应用文件读取权限，就可以播放了</p>
+<p>PS：本次测试的URL是http地址，mediaplayer可以识别并播放，读者需替换掉自己的可播放地址；MediaPlayer的setDataSource支持http/rtps地址，支持本地文件目录以及FileDescriptor的播放，但是android5.0及以上对读取本地文件做了权限增加，相关文献不做展开 ，这里只提供部分解决方案：在AndroidManifest.xml<br>中增加读取权限</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.READ_EXTERNAL_STORAGE"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.WRITE_EXTERNAL_STORAGE"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.MOUNT_UNMOUNT_FILESYSTEMS"</span> /&gt;</span></div></pre></td></tr></table></figure>
+<p>然后在android6.0以上在app设置中开启应用文件读取权限，就可以播放了</p>
 
   </article>
   <div class="random-toc-area">
