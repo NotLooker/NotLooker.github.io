@@ -16,11 +16,10 @@
   
   
   
-    <meta name="description" content="转载注明出处：http://blog.csdn.net/u010181592/article/category/5893483
-文章出自 我不只是看客的博客
-　　好久不更新博客了，视频播放相关技术继续积累。最近整理了下前端时间实现的瀑布流播放等，现在放出博客，接下来几篇 会陆续讲解 瀑布流跳转详情页的缓冲播放，以及多段视频资源的无缝切换；　　短视频的资本浪潮导致很多公司都要分一杯羹，然后就苦...">
+    <meta name="description" content="转载注明出处：文章出自 我不只是看客/NotLooker
+　　好久不更新博客了，视频播放相关技术继续积累。最近整理了下前端时间实现的瀑布流播放等，现在放出博客，接下来几篇 会陆续讲解 瀑布流跳转详情页的缓冲播放，以及多段视频资源的无缝切换；　　短视频的资本浪潮导致很多公司都要分一杯羹，然后就苦了我们这群写代码的，要支持各种播放需求。。。　　下面正文开始：android开发中播放视频大概有3中...">
   
-  <title>my new post [ NotLooker ]</title>
+  <title>TextureView和SurfaceView区别 + 视频播放 [ NotLooker ]</title>
   
   
     <link rel="shortcut icon" href="/favicon.ico">
@@ -57,7 +56,7 @@
       <div id="brand">
         
         <a onClick="openUserCard()">
-          <img id="avatar" src="http://7te9fe.com1.z0.glb.clouddn.com/default_avatar.jpg"/>
+          <img id="avatar" src="https://img.rr.tv/video/20170322/o_6923290903.jpg"/>
           <div id="homelink">NotLooker</div>
         </a>
       </div>
@@ -106,7 +105,7 @@
       
       
   <article id="post">
-    <h1>my new post</h1>
+    <h1>TextureView和SurfaceView区别 + 视频播放</h1>
     <p class="page-title-sub">
       <span id = "post-title-date">Created at 2017-03-23</span>
       
@@ -120,14 +119,31 @@
       
         
         
-        <a href="/tags/博客，文章/">博客，文章</a>
+        <a href="/tags/Android/">Android</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/TextureView/">TextureView</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/SurfaceView/">SurfaceView</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/Android视频/">Android视频</a>
       
       </span>
       
     </p>
     
-    <h4 id="转载注明出处："><a href="#转载注明出处：" class="headerlink" title="转载注明出处："></a>转载注明出处：</h4><p><a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">http://blog.csdn.net/u010181592/article/category/5893483</a></p>
-<h4 id="文章出自-我不只是看客的博客"><a href="#文章出自-我不只是看客的博客" class="headerlink" title="文章出自 我不只是看客的博客"></a>文章出自 <a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">我不只是看客</a>的博客</h4><hr>
+    <h4 id="转载注明出处："><a href="#转载注明出处：" class="headerlink" title="转载注明出处："></a>转载注明出处：</h4><h4 id="文章出自-我不只是看客-NotLooker"><a href="#文章出自-我不只是看客-NotLooker" class="headerlink" title="文章出自 我不只是看客/NotLooker"></a>文章出自 <a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">我不只是看客</a>/<a href="https://notlooker.github.io" target="_blank" rel="external">NotLooker</a></h4><hr>
 <p>　　好久不更新博客了，视频播放相关技术继续积累。最近整理了下前端时间实现的瀑布流播放等，现在放出博客，接下来几篇 会陆续讲解 瀑布流跳转详情页的缓冲播放，以及多段视频资源的无缝切换；<br>　　短视频的资本浪潮导致很多公司都要分一杯羹，然后就苦了我们这群写代码的，要支持各种播放需求。。。<br>　　下面正文开始：<br>android开发中播放视频大概有3中模式，videoview+mediaplayer是最灵活强大的定制化解决办法，videoview继承于SurfaceView；简单介绍下SurfaceView：</p>
 <blockquote>
 <p>SurfaceView从Android 1.0(API level 1)时就有 。它继承自类View，因此它本质上是一个View。但与普通View不同的是，它有自己的Surface。我们知道，一般的Activity包含的多个View会组成View hierachy的树形结构，只有最顶层的DecorView，也就是根结点视图，才是对WMS可见的。这个DecorView在WMS中有一个对应的WindowState。相应地，在SF中对应的Layer。而SurfaceView自带一个Surface，这个Surface在WMS中有自己对应的WindowState，在SF中也会有自己的Layer。如下图所示：<br>   <img src="http://img.blog.csdn.net/20170314172230511?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="图1"><br>   也就是说，虽然在App端它仍在View hierachy中，但在Server端（WMS和SF）中，它与宿主窗口是分离的。这样的好处是对这个Surface的渲染可以放到单独线程去做，渲染时可以有自己的GL context。这对于一些游戏、视频等性能相关的应用非常有益，因为它不会影响主线程对事件的响应。但它也有缺点，因为这个Surface不在View hierachy中，它的显示也不受View的属性控制，所以不能进行平移，缩放等变换，也不能放在其它ViewGroup中，一些View中的特性也无法使用。</p>
@@ -157,7 +173,7 @@
   <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
   <div class="random-toc">
     <h2>Table of Content</h2>
-    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#转载注明出处："><span class="toc-text">转载注明出处：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#文章出自-我不只是看客的博客"><span class="toc-text">文章出自 我不只是看客的博客</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#转载注明出处："><span class="toc-text">转载注明出处：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#文章出自-我不只是看客-NotLooker"><span class="toc-text">文章出自 我不只是看客/NotLooker</span></a></li></ol>
   </div>
 </div>
 
