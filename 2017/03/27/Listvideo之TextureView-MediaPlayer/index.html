@@ -1,0 +1,367 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="John Doe">
+  
+  
+  
+  
+    <meta name="description" content="转载注明出处：文章出自 我不只是看客/NotLooker
+　　产(yi)品(tiao)经(si)理(gou)需要实现瀑布流式的视频播放，就像今日头条那样的。　　今日头条样例：　　
+　　猜测大概是RecycleView + VideoView/TextureVeiw 实现瀑布流式video　　经过上一篇博客 Android视频播放 (一)——TextureView+Meidaplayer播放视...">
+  
+  <title>Android ListVideo之TextureView实现 [ NotLooker ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2017/03/23/TextuerView和SurfaceView区别 + 播放视频/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        TextureView和SurfaceView区别 + 视频播放
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="https://img.rr.tv/video/20170322/o_6923290903.jpg"/>
+          <div id="homelink">NotLooker</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/index.html">Home</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">Archives</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about.md">About</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="https://github.com/NotLooker">Github</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>Android ListVideo之TextureView实现</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2017-03-27</span>
+      
+        <span id = "post-title-updated">Updated at 2017-03-27</span>
+      
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/Listvideo/">Listvideo</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/TextureView/">TextureView</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/Android视频/">Android视频</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/VideoView/">VideoView</a>
+      
+      </span>
+      
+    </p>
+    
+    <h4 id="转载注明出处："><a href="#转载注明出处：" class="headerlink" title="转载注明出处："></a>转载注明出处：</h4><h4 id="文章出自-我不只是看客-NotLooker"><a href="#文章出自-我不只是看客-NotLooker" class="headerlink" title="文章出自 我不只是看客/NotLooker"></a>文章出自 <a href="http://blog.csdn.net/u010181592/article/category/5893483" target="_blank" rel="external">我不只是看客</a>/<a href="https://notlooker.github.io" target="_blank" rel="external">NotLooker</a></h4><hr>
+<p>　　产(yi)品(tiao)经(si)理(gou)需要实现瀑布流式的视频播放，就像今日头条那样的。<br>　　今日头条样例：<br>　　<img src="http://img.blog.csdn.net/20170320210331407?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>　　猜测大概是RecycleView + VideoView/TextureVeiw 实现瀑布流式video<br>　　经过上一篇博客<a href="http://blog.csdn.net/u010181592/article/details/62054571" target="_blank" rel="external"> Android视频播放 (一)——TextureView+Meidaplayer播放视频</a>分析，VideoView继承与SurfaceView应该不可用，但在查看API之后发现，自从Android N之后 SurfaceView渲染方式发生改变，原文: <a href="https://developer.android.com/reference/android/view/SurfaceView.html" target="_blank" rel="external">SurfaceView API</a> </p>
+<blockquote>
+<p>Note: Starting in platform version N, SurfaceView’s window position is updated synchronously with other View rendering. This means that translating and scaling a SurfaceView on screen will not cause rendering artifacts. Such artifacts may occur on previous versions of the platform when its window is positioned asynchronously.</p>
+<p>注：自从Android N开始，SurfaceView的窗口位置与其他View渲染同步更新。这意味着SurfaceView的翻转和平移不会导致组件的重新渲染。这种重新渲染组件出现在以前的平台版本上也许会导致窗口位置不同步。</p>
+</blockquote>
+<p>从以上的note得知，在android 7.0上 SurfaceView可以经行翻转和平移操作了。于是在list中使用surfaceView也是可行的，那么android自带的VideoVeiw就可用。</p>
+<hr>
+<p>这里使用TextureView进行尝试，VideoView也可实现，但是在MediaController显示会出现问题，<br>　　RecycleView+TextureView+MediaPlayer<br>　　<br>　　Activity.class:<br>　　<img src="http://img.blog.csdn.net/20170320173623669?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""><br>本地资源替换为自己的视频</p>
+<p>　　RVAdapter.class：继承自RecyclerView.Adapter，放出关键函数 onCreateViewHolder和onBindViewHolder，viewholder类；<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line">   <span class="function"><span class="keyword">public</span> MyViewHolder <span class="title">onCreateViewHolder</span><span class="params">(ViewGroup parent, <span class="keyword">int</span> viewType)</span> </span>&#123;</div><div class="line">       MyViewHolder holder = <span class="keyword">new</span> MyViewHolder(LayoutInflater.from(</div><div class="line">               context).inflate(R.layout.item, parent,</div><div class="line">               <span class="keyword">false</span>));</div><div class="line">       <span class="keyword">return</span> holder;</div><div class="line">   &#125;</div><div class="line"></div><div class="line">   <span class="meta">@Override</span></div><div class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onBindViewHolder</span><span class="params">(<span class="keyword">final</span> MyViewHolder holder, <span class="keyword">final</span> <span class="keyword">int</span> position)</span> </span>&#123;</div><div class="line">       holder.tv.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</div><div class="line">               holder.pb_waiting.setVisibility(View.VISIBLE);</div><div class="line">			MyApplication.getInstance().getMediaPlayer().reset();</div><div class="line">               holder.tv.setmMediaPlayer(MyApplication.getInstance().getMediaPlayer());</div><div class="line">               holder.tv.setPreparedListener(<span class="keyword">new</span> MediaPlayer.OnPreparedListener() &#123;</div><div class="line">                   <span class="meta">@Override</span></div><div class="line">                   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onPrepared</span><span class="params">(MediaPlayer mp)</span> </span>&#123;</div><div class="line">                       holder.pb_waiting.setVisibility(View.GONE);</div><div class="line">                       holder.tv.startPlay();</div><div class="line"></div><div class="line">                   &#125;</div><div class="line">               &#125;);</div><div class="line">               holder.tv.setUrl(data.get(position)) ;</div><div class="line">           &#125;</div><div class="line">       &#125;);</div><div class="line">   &#125;</div><div class="line">   <span class="class"><span class="keyword">class</span> <span class="title">MyViewHolder</span> <span class="keyword">extends</span> <span class="title">RecyclerView</span>.<span class="title">ViewHolder</span> </span>&#123;</div><div class="line">       MyTextureView tv;</div><div class="line">       Button btn;</div><div class="line">       ProgressBar pb_waiting;</div><div class="line">       <span class="function"><span class="keyword">public</span> <span class="title">MyViewHolder</span><span class="params">(View view)</span> </span>&#123;</div><div class="line">           <span class="keyword">super</span>(view);</div><div class="line">           tv = (MyTextureView) view.findViewById(R.id.textureview);</div><div class="line">           btn = (Button) view.findViewById(R.id.button);</div><div class="line">           pb_waiting = (ProgressBar) view.findViewById(R.id.pb_waiting);</div><div class="line">       &#125;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></p>
+<p>为了使瀑布流同时只能播放一个视频，这里把MediaPlayer提取出来，做一个单例，放到Application中。当item需要播放时，就把MediaPlayer设置给textureview，设置监听， 然后设置播放地址;</p>
+<p>MyApplication：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApplication</span> <span class="keyword">extends</span> <span class="title">Application</span> <span class="keyword">implements</span> <span class="title">LogUtil</span> </span>&#123;</div><div class="line">	<span class="keyword">private</span> <span class="keyword">static</span> MyApplication instance = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> MediaPlayer mediaPlayer;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> MyApplication <span class="title">getInstance</span><span class="params">()</span></span>&#123;</div><div class="line">         <span class="keyword">return</span>  instance ;</div><div class="line">	   &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.onCreate();</div><div class="line">        instance = <span class="keyword">this</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> MediaPlayer <span class="title">getMediaPlayer</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span>(mediaPlayer == <span class="keyword">null</span>)</div><div class="line">            mediaPlayer = <span class="keyword">new</span> MediaPlayer();</div><div class="line">        <span class="keyword">return</span> mediaPlayer;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setMediaPlayer</span><span class="params">(MediaPlayer mediaPlayer)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.mediaPlayer = mediaPlayer;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>布局文件activity_main.xml：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">android.support.v7.widget.RecyclerView</span></span></div><div class="line">      <span class="attr">android:id</span>=<span class="string">"@+id/recyclerview"</span></div><div class="line">      <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></div><div class="line">      <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span>/&gt;</div></pre></td></tr></table></figure></p>
+<p> 布局文件item.xml：<br> <img src="http://img.blog.csdn.net/20170320174217382?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<p>   自定义的MyTextureView.class，继承自TextureView，根据需求，封装了MediaPlayer、SurfaceTextureListener和播放暂停等操作；<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div><div class="line">152</div><div class="line">153</div><div class="line">154</div><div class="line">155</div><div class="line">156</div><div class="line">157</div><div class="line">158</div><div class="line">159</div><div class="line">160</div><div class="line">161</div><div class="line">162</div><div class="line">163</div><div class="line">164</div><div class="line">165</div><div class="line">166</div><div class="line">167</div><div class="line">168</div><div class="line">169</div><div class="line">170</div><div class="line">171</div><div class="line">172</div><div class="line">173</div><div class="line">174</div><div class="line">175</div><div class="line">176</div><div class="line">177</div><div class="line">178</div><div class="line">179</div><div class="line">180</div><div class="line">181</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTextureView</span> <span class="keyword">extends</span> <span class="title">TextureView</span> <span class="keyword">implements</span> <span class="title">TextureView</span>.<span class="title">SurfaceTextureListener</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String TAG = <span class="string">"MyTextureView"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> String playingUrl = <span class="string">""</span>;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> MediaPlayer mMediaPlayer;</div><div class="line">    <span class="keyword">private</span> Surface surface;</div><div class="line">    <span class="keyword">private</span> MediaPlayer.OnPreparedListener preparedListener;</div><div class="line">    <span class="keyword">private</span> MediaPlayer.OnErrorListener errorListener;</div><div class="line">    <span class="keyword">private</span> MediaPlayer.OnCompletionListener completionListener;</div><div class="line">    <span class="keyword">private</span> MediaPlayer.OnInfoListener infoListener;</div><div class="line">    <span class="keyword">private</span> MediaPlayer.OnSeekCompleteListener seekCompleteListener;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyTextureView</span><span class="params">(Context context)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>(context);</div><div class="line">        initView();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyTextureView</span><span class="params">(Context context, AttributeSet attrs)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>(context, attrs);</div><div class="line">        initView();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyTextureView</span><span class="params">(Context context, AttributeSet attrs, <span class="keyword">int</span> defStyle)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>(context, attrs, defStyle);</div><div class="line">        initView();</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startPlay</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (mMediaPlayer != <span class="keyword">null</span>) &#123;</div><div class="line">            mMediaPlayer.start();</div><div class="line">            Log.e(TAG, <span class="string">"startPlay"</span>);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            Log.e(TAG, <span class="string">"start Error media is null"</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pausePlay</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (mMediaPlayer != <span class="keyword">null</span>) &#123;</div><div class="line">            mMediaPlayer.pause();</div><div class="line">            Log.e(TAG, <span class="string">"stopPlay"</span>);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            Log.e(TAG, <span class="string">"pause Error media is null"</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">resetPlay</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (mMediaPlayer != <span class="keyword">null</span>) &#123;</div><div class="line">            mMediaPlayer.reset();</div><div class="line">            Log.e(TAG, <span class="string">"resetPlay"</span>);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            Log.e(TAG, <span class="string">"reset Error media is null"</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destory</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (mMediaPlayer != <span class="keyword">null</span>) &#123;</div><div class="line">            mMediaPlayer.stop();</div><div class="line">            mMediaPlayer.release();</div><div class="line">            mMediaPlayer = <span class="keyword">null</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUrl</span><span class="params">(String path)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (!playingUrl.equals(path)) &#123;</div><div class="line">            mMediaPlayer.reset();</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                playingUrl = path;</div><div class="line">                <span class="keyword">if</span> (path.contains(<span class="string">"http"</span>)) &#123;</div><div class="line">                    mMediaPlayer.setDataSource(path);</div><div class="line">                &#125; <span class="keyword">else</span> &#123;</div><div class="line">                    FileInputStream fis = <span class="keyword">null</span>;</div><div class="line">                    fis = <span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(path));</div><div class="line">                    mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);</div><div class="line">                    mMediaPlayer.setDataSource(fis.getFD());</div><div class="line">                &#125;</div><div class="line">                mMediaPlayer.prepareAsync();</div><div class="line">            &#125; <span class="keyword">catch</span> (FileNotFoundException e) &#123;</div><div class="line">                e.printStackTrace();</div><div class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                e.printStackTrace();</div><div class="line">            &#125;</div><div class="line">        &#125;<span class="keyword">else</span> &#123;</div><div class="line">            mMediaPlayer.start();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span>(preparedListener != <span class="keyword">null</span>) &#123;</div><div class="line">            mMediaPlayer.setOnPreparedListener(preparedListener);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initView</span><span class="params">()</span> </span>&#123;</div><div class="line">        setSurfaceTextureListener(<span class="keyword">this</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureAvailable</span><span class="params">(SurfaceTexture surfaceTexture, <span class="keyword">int</span> i, <span class="keyword">int</span> i2)</span> </span>&#123;</div><div class="line">        initMediaPlayer(surfaceTexture);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">/**</span></div><div class="line">     * <span class="doctag">@param</span> surfaceTexture</div><div class="line">     * <span class="doctag">@return</span> -1 初始化失败</div><div class="line">     */</div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">initMediaPlayer</span><span class="params">(SurfaceTexture surfaceTexture)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (surfaceTexture == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="number">1</span>;</div><div class="line"></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">if</span> (mMediaPlayer == <span class="keyword">null</span>) &#123;</div><div class="line">                mMediaPlayer = <span class="keyword">new</span> MediaPlayer();</div><div class="line">                Log.e(TAG, <span class="string">" initMediaPlayer new media"</span>);</div><div class="line">            &#125;</div><div class="line">            surface = <span class="keyword">new</span> Surface(surfaceTexture);</div><div class="line">            mMediaPlayer.setSurface(surface);</div><div class="line">            Log.e(TAG, <span class="string">" initMediaPlayer Success"</span>);</div><div class="line">            <span class="keyword">return</span> <span class="number">1</span>;</div><div class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">            e.printStackTrace();</div><div class="line">            Log.e(TAG, <span class="string">" initMediaPlayer-"</span> + e.getMessage());</div><div class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureSizeChanged</span><span class="params">(SurfaceTexture surfaceTexture, <span class="keyword">int</span> i, <span class="keyword">int</span> i2)</span> </span>&#123;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onSurfaceTextureDestroyed</span><span class="params">(SurfaceTexture surfaceTexture)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceTextureUpdated</span><span class="params">(SurfaceTexture surfaceTexture)</span> </span>&#123;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent event)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.onTouchEvent(event);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setOnClickListener</span><span class="params">(OnClickListener l)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>.setOnClickListener(l);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setmMediaPlayer</span><span class="params">(MediaPlayer mMediaPlayer)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.mMediaPlayer = mMediaPlayer;</div><div class="line">        mMediaPlayer.setSurface(<span class="keyword">new</span> Surface(<span class="keyword">this</span>.getSurfaceTexture()));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getPlayingUrl</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> playingUrl;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPreparedListener</span><span class="params">(MediaPlayer.OnPreparedListener preparedListener)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.preparedListener = preparedListener;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setErrorListener</span><span class="params">(MediaPlayer.OnErrorListener errorListener)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.errorListener = errorListener;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCompletionListener</span><span class="params">(MediaPlayer.OnCompletionListener completionListener)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.completionListener = completionListener;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setInfoListener</span><span class="params">(MediaPlayer.OnInfoListener infoListener)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.infoListener = infoListener;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSeekCompleteListener</span><span class="params">(MediaPlayer.OnSeekCompleteListener seekCompleteListener)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.seekCompleteListener = seekCompleteListener;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>MyTextureView封装了 startPlay，pausePlay等播放相关操作；还有setUrl 统一了播放地址的入口，可以播放本地路径或者http协议的网络url，同时保存了正在播放的url；<br>这还可以封装更多操作，方便以后功能的扩展。例如  item跳转详情页无缝播放功能的实现;</p>
+<p>demo如下<br><img src="http://img.blog.csdn.net/20170320205808494?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""></p>
+<hr>
+<h3 id="VideoView测试"><a href="#VideoView测试" class="headerlink" title="VideoView测试"></a>VideoView测试</h3><p>用RecycleView+VideoView测试list播放，通过查看资料，得知videoview可以实现，更改adapter的代码，放出关键代码 onBindViewHolder()和ViewHolder<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onBindViewHolder</span><span class="params">(<span class="keyword">final</span> MyViewHolder holder, <span class="keyword">final</span> <span class="keyword">int</span> position)</span> </span>&#123;</div><div class="line"></div><div class="line">       holder.tv.setVideoPath(data.get(position));</div><div class="line">       holder.tv.setMediaController(<span class="keyword">new</span> MediaController(context));</div><div class="line"></div><div class="line">       holder.tv.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</div><div class="line">	   holder.btn.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</div><div class="line">           <span class="meta">@Override</span></div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</div><div class="line">               <span class="keyword">if</span>( holder.tv.isPlaying())</div><div class="line">                   holder.tv.pause();</div><div class="line">               <span class="keyword">else</span></div><div class="line">                   holder.tv.start();</div><div class="line">           &#125;</div><div class="line">       &#125;);</div><div class="line">   &#125;</div><div class="line">   <span class="class"><span class="keyword">class</span> <span class="title">MyViewHolder</span> <span class="keyword">extends</span> <span class="title">RecyclerView</span>.<span class="title">ViewHolder</span> </span>&#123;</div><div class="line"></div><div class="line">       VideoView tv;</div><div class="line">       Button btn;</div><div class="line"></div><div class="line">       <span class="function"><span class="keyword">public</span> <span class="title">MyViewHolder</span><span class="params">(View view)</span> </span>&#123;</div><div class="line">           <span class="keyword">super</span>(view);</div><div class="line">           tv = (VideoView) view.findViewById(R.id.textureview);</div><div class="line">           btn = (Button) view.findViewById(R.id.button);</div><div class="line">       &#125;</div><div class="line">   &#125;</div></pre></td></tr></table></figure></p>
+<p>点击按钮播放，但有个问题，是MediaController是一个Framlayout，点击就会生成，so在item使用中会出现控制器位置错位如下：<br><img src="http://img.blog.csdn.net/20170327211058996?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDE4MTU5Mg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt=""><br>而TextureView的话，可以后期自己重写相关单击操作、增加控制器等，so选择TextureView实现listvideo.</p>
+<p>本文结束，因为代码较齐全，不提供工程下载</p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#转载注明出处："><span class="toc-text">转载注明出处：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#文章出自-我不只是看客-NotLooker"><span class="toc-text">文章出自 我不只是看客/NotLooker</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#VideoView测试"><span class="toc-text">VideoView测试</span></a>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2017/03/23/TextuerView和SurfaceView区别 + 播放视频/" class="next">Next post TextureView和SurfaceView区别 + 视频播放 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by John Doe using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="https://img.rr.tv/video/20170322/o_6923290903.jpg">
+    <p id="description"></p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/NotLooker">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="http://weibo.com/2653536740/profile?rightmod=1&wvr=6&mod=personinfo">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/wang-he-88-65/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="http://blog.csdn.net/u010181592">
+        
+          CSDN
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
